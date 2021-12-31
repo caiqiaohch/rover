@@ -481,7 +481,10 @@ update_view()
     } else
         numsize = -1;
     color_set(RVC_CWD, NULL);
-    mbstowcs(WBUF, CWD, PATH_MAX);
+
+    sprintf(BUF2,  "tab:%d  %s", rover.tab , CWD); 
+    mbstowcs(WBUF, BUF2, PATH_MAX); 
+
     mvaddnwstr(0, 0, WBUF, COLS - 4 - numsize);
     wcolor_set(rover.window, RVC_BORDER, NULL);
     wborder(rover.window, 0, 0, 0, 0, 0, 0, 0, 0);
