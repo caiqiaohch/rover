@@ -4,10 +4,10 @@
    ALT+X: "M-X" */
 #define RVK_QUIT        "q"
 #define RVK_HELP        "?"
-#define RVK_DOWN        "j"
-#define RVK_UP          "k"
-#define RVK_JUMP_DOWN   "J"
-#define RVK_JUMP_UP     "K"
+#define RVK_DOWN        "k"
+#define RVK_UP          "j"
+#define RVK_JUMP_DOWN   "K"
+#define RVK_JUMP_UP     "J"
 #define RVK_JUMP_TOP    "g"
 #define RVK_JUMP_BOTTOM "G"
 #define RVK_CD_DOWN     "l"
@@ -17,7 +17,7 @@
 #define RVK_COPY_PATH   "y"
 #define RVK_PASTE_PATH  "p"
 #define RVK_REFRESH     "r"
-#define RVK_SHELL       "^M"
+#define RVK_SHELL       "z"
 #define RVK_VIEW        " "
 #define RVK_EDIT        "e"
 #define RVK_OPEN        "o"
@@ -86,3 +86,4 @@
    undefined if you prefer external  programs to be launched with just
    `$EXTERNAL_PROGRAM [arg]`. */
 #define RV_SHELL        "/bin/sh"
+#define RV_VIM        "vim"

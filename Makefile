@@ -7,7 +7,7 @@ MANDIR=$(DESTDIR)$(MANPREFIX)/man1
 all: rover
 
 rover: rover.c config.h
-	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS) $(LDLIBS)
+	$(CC) -g $(CFLAGS) -o $@ $< $(LDFLAGS) $(LDLIBS)
 
 install: rover
 	rm -f $(BINDIR)/rover

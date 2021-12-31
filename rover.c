@@ -331,6 +331,9 @@ get_user_programs()
     ROVER_ENV(user_editor, VISUAL)
     if (!user_editor)
         ROVER_ENV(user_editor, EDITOR)
+    if (!user_editor)
+        user_editor = RV_VIM;
+
     ROVER_ENV(user_open, OPEN)
 }
 
@@ -348,11 +351,33 @@ spawn(char **args)
         disable_handlers();
         endwin();
         waitpid(pid, &status, 0);
-        enable_handlers();
+        enable_handlers();   
         kill(getpid(), SIGWINCH);
     } else if (pid == 0) {
         /* Child process. */
         execvp(args[0], args);
+    }
+}
+static void
+spawnEx(char **args)
+{
+    pid_t pid;
+    int status;
+
+    setenv("RVSEL", rover.nfiles ? ENAME(ESEL) : "", 1);
+    pid = fork();
+    if (pid > 0) {
+        /* fork() succeeded. */
+      
+        disable_handlers();
+        endwin();
+        waitpid(pid, &status, 0);
+        enable_handlers();  
+        getchar();
+        kill(getpid(), SIGWINCH);
+    } else if (pid == 0) {
+        /* Child process. */
+        execvp(args[0], args); 
     }
 }
 
@@ -386,9 +411,11 @@ open_with_env(char *program, char *path)
 {
     if (program) {
 #ifdef RV_SHELL
+
         strncpy(BUF1, program, BUFLEN - 1);
         strncat(BUF1, " ", BUFLEN - strlen(program) - 1);
         shell_escaped_cat(BUF1, path, BUFLEN - strlen(program) - 2);
+        printf("%s\n",BUF1);
         spawn((char *[]) {RV_SHELL, "-c", BUF1, NULL});
 #else
         spawn((char *[]) {program, path, NULL});
@@ -1026,6 +1053,9 @@ update_input(const char *prompt, Color color)
 int
 main(int argc, char *argv[])
 {
+    // setenv("VISUAL", "UI", 1);
+
+
     int i, ch;
     char *program;
     char *entry;
@@ -1109,15 +1139,15 @@ main(int argc, char *argv[])
             cd(0);
         } else if (!strcmp(key, RVK_HELP)) {
             spawn((char *[]) {"man", "rover", NULL});
-        } else if (!strcmp(key, RVK_DOWN)) {
+        } else if (!strcmp(key, RVK_DOWN)|| (ch == KEY_DOWN)) {
             if (!rover.nfiles) continue;
             ESEL = MIN(ESEL + 1, rover.nfiles - 1);
             update_view();
-        } else if (!strcmp(key, RVK_UP)) {
+        } else if (!strcmp(key, RVK_UP) ||  (ch == KEY_UP)) {
             if (!rover.nfiles) continue;
             ESEL = MAX(ESEL - 1, 0);
             update_view();
-        } else if (!strcmp(key, RVK_JUMP_DOWN)) {
+        } else if (!strcmp(key, RVK_JUMP_DOWN) ) {
             if (!rover.nfiles) continue;
             ESEL = MIN(ESEL + RV_JUMP, rover.nfiles - 1);
             if (rover.nfiles > HEIGHT)
@@ -1136,7 +1166,7 @@ main(int argc, char *argv[])
             if (!rover.nfiles) continue;
             ESEL = rover.nfiles - 1;
             update_view();
-        } else if (!strcmp(key, RVK_CD_DOWN)) {
+        } else if (!strcmp(key, RVK_CD_DOWN) || (ch == KEY_RIGHT)) {
             if (!rover.nfiles || !S_ISDIR(EMODE(ESEL))) continue;
             if (chdir(ENAME(ESEL)) == -1) {
                 message(RED, "Cannot access \"%s\".", ENAME(ESEL));
@@ -1144,7 +1174,7 @@ main(int argc, char *argv[])
             }
             strcat(CWD, ENAME(ESEL));
             cd(1);
-        } else if (!strcmp(key, RVK_CD_UP)) {
+        } else if (!strcmp(key, RVK_CD_UP)||  (ch == KEY_LEFT)) {
             char *dirname, first;
             if (!strcmp(CWD, "/")) continue;
             CWD[strlen(CWD) - 1] = '\0';
@@ -1245,10 +1275,51 @@ paste_path_fail:
             if (!rover.nfiles || S_ISDIR(EMODE(ESEL))) continue;
             if (open_with_env(user_pager, ENAME(ESEL)))
                 cd(0);
-        } else if (!strcmp(key, RVK_EDIT)) {
-            if (!rover.nfiles || S_ISDIR(EMODE(ESEL))) continue;
-            if (open_with_env(user_editor, ENAME(ESEL)))
-                cd(0);
+        } else if (!strcmp(key, RVK_EDIT) ||  (ch == 13)) {
+            if (!rover.nfiles || S_ISDIR(EMODE(ESEL))) {
+                 strcat(CWD, ENAME(ESEL));
+            cd(1);
+                continue;
+                }
+                else
+                {
+                    if ((ch == 13) && (S_IXUSR & EMODE(ESEL)))
+                    {
+                        message(YELLOW, "run \"%s\" ? (r(run)/e(edit)/s(shell))", ENAME(ESEL));
+                        if (rover_getch() == 'r') { 
+                            memset(BUF1,0,sizeof(BUF1));
+                            strncpy(BUF1, RV_SHELL, BUFLEN - 1);
+                            strncat(BUF1, " ", BUFLEN - strlen(program) - 1);
+                            shell_escaped_cat(BUF1, ENAME(ESEL), BUFLEN - strlen(program) - 2);  
+                            spawnEx((char *[]) {RV_SHELL, "-c", BUF1, NULL}); 
+                            message(YELLOW, "run \"%s\"?" ,BUF1);
+                            continue;
+                        }
+                        else if (rover_getch() == 'e') { 
+                            if (open_with_env(user_editor, ENAME(ESEL)))
+                                cd(0);                            
+                        }
+                        else if (rover_getch() == 's')
+                        {
+                            program = user_shell;
+                             spawn((char *[]) {RV_SHELL, "-c", program, NULL});
+                              cd(0);
+                        }
+                       
+                       // cd(0);
+                        //open_with_env(RV_SHELL,ENAME(ESEL));
+                       // spawn((char *[]) {RV_SHELL, "-c", user_shell,ENAME(ESEL), NULL});
+                        //reload();
+                          
+                       // continue;
+                    }
+                    else
+                    {
+                    if (open_with_env(user_editor, ENAME(ESEL)))
+                        cd(0);
+                    }
+                }
+            
         } else if (!strcmp(key, RVK_OPEN)) {
             if (!rover.nfiles || S_ISDIR(EMODE(ESEL))) continue;
             if (open_with_env(user_open, ENAME(ESEL)))
