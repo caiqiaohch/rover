@@ -11,11 +11,15 @@ vi-like key bindings for navigation and can open files in $PAGER and $EDITOR.
 Basic file system operations are also implemented (see rover(1) for details).
 Rover is designed to be simple, fast and portable.
 ===========
-[ubuntu]
-sudo apt-get install libncurses5-dev libncursesw5-dev
-===========
+
 Quick Start
 ===========
+
+ubuntu
+ ```
+sudo apt-get install libncurses5-dev libncursesw5-dev
+ ```
+
 
  Building and Installing:
  ```
