@@ -10,8 +10,10 @@ terminal, compared to what's possible by using `cd`, `ls`, etc. Rover has
 vi-like key bindings for navigation and can open files in $PAGER and $EDITOR.
 Basic file system operations are also implemented (see rover(1) for details).
 Rover is designed to be simple, fast and portable.
-
-
+===========
+[ubuntu]
+sudo apt-get install libncurses5-dev libncursesw5-dev
+===========
 Quick Start
 ===========
 
