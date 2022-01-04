@@ -1502,8 +1502,7 @@ paste_path_fail:
         } else if (!strcmp(key, RVK_TG_HIDDEN)) {
             FLAGS ^= SHOW_HIDDEN;
             reload();
-        } 
-        else if (!strcmp(key, RVK_TIME)) {
+        }  else if (!strcmp(key, RVK_TIME) || !strcmp(key, RVK_TIME2) ) {
             FLAGS ^= SHOW_TIME;
             reload();
         }

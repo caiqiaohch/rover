@@ -37,6 +37,7 @@
 #define RVK_MARK_COPY   "C"
 #define RVK_MARK_MOVE   "V"
 #define RVK_TIME        "T"
+#define RVK_TIME2        "x"
 /* Colors available: DEFAULT, RED, GREEN, YELLOW, BLUE, CYAN, MAGENTA, WHITE, BLACK. */
 #define RVC_CWD         GREEN
 #define RVC_STATUS      CYAN
