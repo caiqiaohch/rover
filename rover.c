@@ -22,7 +22,7 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <curses.h>
-
+#include <time.h>
 #include "config.h"
 
 /*  This signal is not defined by POSIX, but should be
@@ -53,6 +53,7 @@ static char *user_open;
 #define SHOW_FILES      0x01u
 #define SHOW_DIRS       0x02u
 #define SHOW_HIDDEN     0x04u
+#define SHOW_TIME       0x08u
 
 /* Marks parameters. */
 #define BULK_INIT   5
@@ -65,6 +66,7 @@ typedef struct Row {
     mode_t mode;
     int islink;
     int marked;
+    struct tm* t;
 } Row;
 
 /* Dynamic array of marked entries. */
@@ -114,6 +116,7 @@ static struct Rover {
 #define ENAME(I)    rover.rows[I].name
 #define ESIZE(I)    rover.rows[I].size
 #define EMODE(I)    rover.rows[I].mode
+#define ETIME(I)    rover.rows[I].t
 #define ISLINK(I)   rover.rows[I].islink
 #define MARKED(I)   rover.rows[I].marked
 #define SCROLL      rover.tabs[rover.tab].scroll
@@ -567,7 +570,15 @@ update_view()
                 }
             }
             wcscat(WBUF, L"   ");
-            int lt = wcslen(WBUF);
+            int lt = 0;
+            if(FLAGS & SHOW_TIME)
+            {
+                lt = wcslen(WBUF);
+                swprintf(WBUF+lt, PATH_MAX - lt, L"%04d-%02d-%02d %02d:%02d:%02d", (int)( 1900 + ETIME(j)->tm_year ), ETIME(j)->tm_mon+1, ETIME(j)->tm_mday,ETIME(j)->tm_hour, ETIME(j)->tm_min, ETIME(j)->tm_sec);
+                wcscat(WBUF, L"   ");               
+            }
+
+            lt = wcslen(WBUF);
             mbstowcs(WBUF+lt, ENAME(j), PATH_MAX);
             
            // mbstowcs(WBUF, ENAME(j), PATH_MAX);
@@ -624,7 +635,17 @@ update_view()
                 }
             }
             wcscat(WBUF, L"   ");
-            int lt = wcslen(WBUF);
+            int lt = 0;
+            if(FLAGS & SHOW_TIME)
+            {
+                
+                 lt = wcslen(WBUF);
+                swprintf(WBUF+lt, PATH_MAX - lt, L"%04d-%02d-%02d %02d:%02d:%02d", (int)( 1900 + ETIME(j)->tm_year ), ETIME(j)->tm_mon+1, ETIME(j)->tm_mday,ETIME(j)->tm_hour, ETIME(j)->tm_min, ETIME(j)->tm_sec);
+                wcscat(WBUF, L"   ");
+            }
+           
+
+            lt = wcslen(WBUF);
             int length = mbstowcs(WBUF+lt, ENAME(j), PATH_MAX);
             length= wcslen(WBUF);
             int namecols = wcswidth(WBUF,  length);
@@ -664,11 +685,13 @@ update_view()
     BUF1[0] = FLAGS & SHOW_FILES  ? 'F' : ' ';
     BUF1[1] = FLAGS & SHOW_DIRS   ? 'D' : ' ';
     BUF1[2] = FLAGS & SHOW_HIDDEN ? 'H' : ' ';
+    BUF1[3] = FLAGS & SHOW_TIME   ? 'T' : ' ';
+
     if (!rover.nfiles)
         strcpy(BUF2, "0/0");
     else
         snprintf(BUF2, BUFLEN, "%d/%d", ESEL + 1, rover.nfiles);
-    snprintf(BUF1+3, BUFLEN-3, "%12s", BUF2);
+    snprintf(BUF1+4, BUFLEN-4, "%12s", BUF2);
     color_set(RVC_STATUS, NULL);
     mvaddstr(LINES - 1, STATUSPOS, BUF1);
     wrefresh(rover.window);
@@ -741,6 +764,8 @@ ls(Row **rowsp, uint8_t flags)
         lstat(ep->d_name, &statbuf);
         rows[i].islink = S_ISLNK(statbuf.st_mode);
         stat(ep->d_name, &statbuf);
+        struct tm *t= localtime(&statbuf.st_ctim.tv_sec);
+        rows[i].t = t;
         if (S_ISDIR(statbuf.st_mode)) {
             if (flags & SHOW_DIRS) {
                 rows[i].name = malloc(strlen(ep->d_name) + 2);
@@ -1477,7 +1502,12 @@ paste_path_fail:
         } else if (!strcmp(key, RVK_TG_HIDDEN)) {
             FLAGS ^= SHOW_HIDDEN;
             reload();
-        } else if (!strcmp(key, RVK_NEW_FILE)) {
+        } 
+        else if (!strcmp(key, RVK_TIME)) {
+            FLAGS ^= SHOW_TIME;
+            reload();
+        }
+        else if (!strcmp(key, RVK_NEW_FILE)) {
             int ok = 0;
             start_line_edit("");
             update_input(RVP_NEW_FILE, RED);
