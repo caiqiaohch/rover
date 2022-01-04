@@ -520,25 +520,126 @@ update_view()
             wcolor_set(rover.window, RVC_FIFO, NULL);
         else if (S_ISSOCK(EMODE(j)))
             wcolor_set(rover.window, RVC_SOCK, NULL);
+
         if (S_ISDIR(EMODE(j))) {
-            mbstowcs(WBUF, ENAME(j), PATH_MAX);
+
+
+            memset(WBUF,0,sizeof(WBUF));
+            if(S_ISREG(EMODE(j)))
+            wcscat(WBUF, L"-");
+            else if(S_ISDIR(EMODE(j)))
+            wcscat(WBUF, L"d");
+            else if(S_ISCHR(EMODE(j)))
+            wcscat(WBUF, L"c");
+            else if(S_ISBLK(EMODE(j)))
+            wcscat(WBUF, L"b");
+            else if(S_ISFIFO(EMODE(j)))
+            wcscat(WBUF, L"p");
+            else if(S_ISLNK(EMODE(j)))
+            wcscat(WBUF, L"l");
+            else if(S_ISSOCK(EMODE(j)))
+            wcscat(WBUF, L"s");
+
+            for(int n=8;n>=0;n--)
+	        {
+                if(EMODE(j)&(1<<n))
+                {
+                    switch(n%3)
+                    {
+                    case 2:
+                         wcscat(WBUF, L"r");
+                        break;
+                    case 1:
+                         wcscat(WBUF, L"w");
+                        break;
+                    case 0:
+                         wcscat(WBUF, L"x");
+                            break;
+                    default:
+                         wcscat(WBUF, L" ");
+                        break;
+        
+                    }
+                }
+                else
+                {
+                     wcscat(WBUF, L"-");
+                }
+            }
+            wcscat(WBUF, L"   ");
+            int lt = wcslen(WBUF);
+            mbstowcs(WBUF+lt, ENAME(j), PATH_MAX);
+            
+           // mbstowcs(WBUF, ENAME(j), PATH_MAX);
             if (ISLINK(j))
                 wcscat(WBUF, L"/");
+
+            // int length = mbstowcs(WBUF, ENAME(j), PATH_MAX);
+            // int namecols = wcswidth(WBUF, length);
+            // swprintf(WBUF + length, PATH_MAX - length, L"%#o",(EMODE(j) & ~(S_IFMT)));
+
         } else {
             char *suffix, *suffixes = "BKMGTPEZY";
             off_t human_size = ESIZE(j) * 10;
-            int length = mbstowcs(WBUF, ENAME(j), PATH_MAX);
-            int namecols = wcswidth(WBUF, length);
+            memset(WBUF,0,sizeof(WBUF));
+            if(S_ISREG(EMODE(j)))
+            wcscat(WBUF, L"-");
+            else if(S_ISDIR(EMODE(j)))
+            wcscat(WBUF, L"d");
+            else if(S_ISCHR(EMODE(j)))
+            wcscat(WBUF, L"c");
+            else if(S_ISBLK(EMODE(j)))
+            wcscat(WBUF, L"b");
+            else if(S_ISFIFO(EMODE(j)))
+            wcscat(WBUF, L"p");
+            else if(S_ISLNK(EMODE(j)))
+            wcscat(WBUF, L"l");
+            else if(S_ISSOCK(EMODE(j)))
+            wcscat(WBUF, L"s");
+
+            for(int n=8;n>=0;n--)
+	        {
+                if(EMODE(j)&(1<<n))
+                {
+                    switch(n%3)
+                    {
+                    case 2:
+                         wcscat(WBUF, L"r");
+                        break;
+                    case 1:
+                         wcscat(WBUF, L"w");
+                        break;
+                    case 0:
+                         wcscat(WBUF, L"x");
+                            break;
+                    default:
+                         wcscat(WBUF, L" ");
+                        break;
+        
+                    }
+                }
+                else
+                {
+                     wcscat(WBUF, L"-");
+                }
+            }
+            wcscat(WBUF, L"   ");
+            int lt = wcslen(WBUF);
+            int length = mbstowcs(WBUF+lt, ENAME(j), PATH_MAX);
+            length= wcslen(WBUF);
+            int namecols = wcswidth(WBUF,  length);
+          
             for (suffix = suffixes; human_size >= 10240; suffix++)
                 human_size = (human_size + 512) / 1024;
             if (*suffix == 'B')
-                swprintf(WBUF + length, PATH_MAX - length, L"%*d %c",
+                swprintf(WBUF + length, PATH_MAX - length, L"%*d %c",//(EMODE(j) & ~(S_IFMT)),
                          (int) (COLS - namecols - 6),
                          (int) human_size / 10, *suffix);
             else
-                swprintf(WBUF + length, PATH_MAX - length, L"%*d.%d %c",
+                swprintf(WBUF + length, PATH_MAX - length, L"%*d.%d %c",//(EMODE(j) & ~(S_IFMT)),
                          (int) (COLS - namecols - 8),
                          (int) human_size / 10, (int) human_size % 10, *suffix);
+
         }
         mvwhline(rover.window, i + 1, 1, ' ', COLS - 2);
         mvwaddnwstr(rover.window, i + 1, 2, WBUF, COLS - 4);
