@@ -14,6 +14,15 @@ Rover is designed to be simple, fast and portable.
 
 Quick Start
 ===========
+在Linux下一切皆文件 everything is file，包括目录也是文件的一种而这些文件被分为七种类型：
+• -：普通文件  
+• d: 目录文件
+• b: 块设备
+• c: 字符设备
+• l: 符号链接文件  
+• p: 管道文件pipe
+• s: 套接字文件sock
+
 
 ubuntu
  ```
