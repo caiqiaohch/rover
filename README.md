@@ -25,6 +25,13 @@ Quick Start
 • s: 套接字文件sock
  ```
 
+
+centos7
+ ```
+yum install ncurses-devel
+yum install ncurses*
+ ```
+
 ubuntu
  ```
 sudo apt-get install libncurses5-dev libncursesw5-dev
